@@ -6,9 +6,12 @@ export interface Wish {
 }
 
 export interface Greeting {
+  id?: string;
   sender: string;
   receiver?: string;
   message: string;
+  imageUrl?: string;
+  createdAt?: string;
 }
 
 export interface MoonMessage {

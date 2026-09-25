@@ -32,18 +32,26 @@ export default function GreetingCard({ greeting, onClose }: GreetingCardProps) {
   };
 
   const handleShare = async () => {
+    const shareUrl = greeting.id
+      ? `${window.location.origin}${window.location.pathname}?g=${greeting.id}`
+      : undefined;
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'Lời chúc Trung Thu 🏮',
           text: cardText,
+          url: shareUrl,
         });
       } catch {
         // User cancelled or not supported
         handleCopy();
       }
     } else {
-      handleCopy();
+      try {
+        await navigator.clipboard.writeText(shareUrl ? `${cardText}\n\n${shareUrl}` : cardText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch { handleCopy(); }
     }
   };
 
@@ -95,6 +103,10 @@ export default function GreetingCard({ greeting, onClose }: GreetingCardProps) {
 
               {/* Divider */}
               <div className="w-16 h-px mx-auto mb-5" style={{ background: 'rgba(255,209,102,0.3)' }} />
+
+              {greeting.imageUrl && (
+                <img src={greeting.imageUrl} alt="Ảnh đính kèm lời chúc" className="w-full max-h-52 object-cover rounded-xl mb-5" />
+              )}
 
               {/* Message */}
               <p className="text-amber-100 text-sm leading-loose whitespace-pre-line mb-5" style={{ fontStyle: 'italic' }}>

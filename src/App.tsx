@@ -27,6 +27,7 @@ import { useWishes } from './hooks/useWishes';
 import { useAudio } from './hooks/useAudio';
 import { Greeting } from './types/wish';
 import { isSupabaseConfigured } from './lib/supabase';
+import { createGreeting, fetchGreeting } from './services/greetingService';
 
 // Toast
 function Toast({ message, visible }: { message: string; visible: boolean }) {
@@ -95,6 +96,18 @@ export default function App() {
   const fireFnRef = useRef<((x: number, y: number) => void) | null>(null);
   const greetingSectionRef = useRef<HTMLElement>(null);
   const clickCooldown = useRef(false);
+
+  useEffect(() => {
+    const greetingId = new URLSearchParams(window.location.search).get('g');
+    if (!greetingId) return;
+    fetchGreeting(greetingId).then((sharedGreeting) => {
+      if (sharedGreeting) setGreeting(sharedGreeting);
+    });
+  }, []);
+
+  const handleGreetingGenerated = useCallback(async (newGreeting: Greeting, image?: File | null) => {
+    setGreeting(await createGreeting(newGreeting, image));
+  }, []);
 
   // Show loading briefly then reveal
   useEffect(() => {
@@ -241,7 +254,7 @@ export default function App() {
 
         <GreetingSection
           sectionRef={greetingSectionRef}
-          onGreetingGenerated={(g) => setGreeting(g)}
+          onGreetingGenerated={handleGreetingGenerated}
         />
 
         <Footer />

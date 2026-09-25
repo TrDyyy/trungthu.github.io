@@ -6,7 +6,7 @@ import { randomChoice } from '../utils/random';
 
 interface GreetingSectionProps {
   sectionRef: React.RefObject<HTMLElement>;
-  onGreetingGenerated: (g: Greeting) => void;
+  onGreetingGenerated: (g: Greeting, image?: File | null) => Promise<void>;
 }
 
 export default function GreetingSection({ sectionRef, onGreetingGenerated }: GreetingSectionProps) {
@@ -18,6 +18,10 @@ export default function GreetingSection({ sectionRef, onGreetingGenerated }: Gre
   const [message, setMessage] = useState('');
   const [senderError, setSenderError] = useState('');
   const [messageError, setMessageError] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Moon wish generator
   const [moonWish, setMoonWish] = useState('');
@@ -31,7 +35,26 @@ export default function GreetingSection({ sectionRef, onGreetingGenerated }: Gre
     setMoonWishVisible(true);
   };
 
-  const handleSubmitGreeting = (e: React.FormEvent) => {
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setImageError('');
+    if (!file) return setImage(null);
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setImage(null);
+      setImageError('Chỉ nhận ảnh JPG, PNG hoặc WebP.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setImage(null);
+      setImageError('Ảnh tối đa 5 MB.');
+      event.target.value = '';
+      return;
+    }
+    setImage(file);
+  };
+
+  const handleSubmitGreeting = async (e: React.FormEvent) => {
     e.preventDefault();
     let valid = true;
 
@@ -50,12 +73,19 @@ export default function GreetingSection({ sectionRef, onGreetingGenerated }: Gre
     }
 
     if (!valid) return;
-
-    onGreetingGenerated({
-      sender: sender.trim(),
-      receiver: receiver.trim() || undefined,
-      message: message.trim(),
-    });
+    setSubmitError('');
+    setSubmitting(true);
+    try {
+      await onGreetingGenerated({
+        sender: sender.trim(),
+        receiver: receiver.trim() || undefined,
+        message: message.trim(),
+      }, image);
+    } catch {
+      setSubmitError('Không thể lưu thiệp. Vui lòng thử lại.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -142,8 +172,21 @@ export default function GreetingSection({ sectionRef, onGreetingGenerated }: Gre
                 />
               </FormField>
 
-              <button type="submit" className="btn-primary w-full">
-                💌 Tạo thiệp chúc
+              <FormField id="g-image" label="Ảnh đính kèm" hint="không bắt buộc, tối đa 5 MB">
+                <input
+                  id="g-image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="form-input file:mr-3 file:rounded-lg file:border-0 file:bg-amber-300/15 file:px-3 file:py-1.5 file:text-amber-200"
+                />
+              </FormField>
+              {image && <p className="text-amber-300/60 text-xs">Đã chọn: {image.name}</p>}
+              {imageError && <p className="text-red-400 text-xs">{imageError}</p>}
+              {submitError && <p className="text-red-400 text-xs">{submitError}</p>}
+
+              <button type="submit" className="btn-primary w-full" disabled={submitting} style={{ opacity: submitting ? 0.7 : 1 }}>
+                {submitting ? '⏳ Đang tạo thiệp...' : '💌 Tạo thiệp chúc'}
               </button>
             </form>
           </motion.div>
