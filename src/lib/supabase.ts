@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const configuredSupabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+// The Dashboard's Project URL is the preferred value. Also accept a copied
+// REST endpoint so a trailing /rest/v1 does not produce /rest/v1/rest/v1.
+const supabaseUrl = configuredSupabaseUrl?.replace(/\/rest\/v1\/?$/, '');
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 /**
