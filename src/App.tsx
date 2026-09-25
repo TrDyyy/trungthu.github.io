@@ -91,7 +91,7 @@ export default function App() {
   const [toast, setToast] = useState({ visible: false, message: '' });
 
   const { wishes, status: wishStatus, isLive, addWish } = useWishes();
-  const { isPlaying, toggle: toggleMusic } = useAudio('/audio/mid-autumn.mp3');
+  const { isPlaying, toggle: toggleMusic } = useAudio(`${import.meta.env.BASE_URL}audio/audio.mp3`);
 
   const fireFnRef = useRef<((x: number, y: number) => void) | null>(null);
   const greetingSectionRef = useRef<HTMLElement>(null);
